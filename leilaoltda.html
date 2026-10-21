@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#131214">
+  <title>Leilão de Real — Sua carteira de lances</title>
+  <style>
+    :root {
+      --bg: #131214; --panel: #1c1c1e; --panel-hover: #2c2c2e; --accent: #9b7aff; --accent-hover: #b092ff; --green: #34c759; --text: #ffffff; --muted: #8e8e93; --line: rgba(255,255,255,.08); --shadow: 0 10px 30px rgba(0,0,0,.5); --input-bg: #1c1c1e; --bottom-nav-bg: rgba(28,28,30,0.95);
+    }
+    body.light-mode {
+      --bg: #f2f2f7; --panel: #ffffff; --panel-hover: #e5e5ea; --accent: #7b5cff; --accent-hover: #6847f5; --green: #28a745; --text: #000000; --muted: #666666; --line: rgba(0,0,0,.08); --shadow: 0 10px 30px rgba(0,0,0,.05); --input-bg: #ffffff; --bottom-nav-bg: rgba(255,255,255,0.95);
+    }
+    
+    *{box-sizing:border-box}html{scroll-behavior:smooth}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.5;transition:background 0.3s, color 0.3s; padding-bottom: 70px;} 
+    a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+    .wrap{width:min(800px,calc(100% - 30px));margin:auto} 
+    
+    /* BARRA DE CONFIANÇA (TOP BAR) */
+    .trust-banner {
+      background: linear-gradient(90deg, #6a1b9a, #9b7aff, #d4a93a);
+      color: #fff;
+      text-align: center;
+      padding: 10px 15px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      overflow: hidden;
+      position: relative;
+      white-space: nowrap;
+      z-index: 20;
+    }
+    .trust-banner span {
+      display: inline-block;
+      padding-left: 100%;
+      animation: marquee 20s linear infinite;
+    }
+    .trust-banner strong { color: #fff3c4; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+    
+    @keyframes marquee {
+      0%   { transform: translate(0, 0); }
+      100% { transform: translate(-100%, 0); }
+    }
+
+    /* CABEÇALHO */
+    header{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line);transition:background 0.3s;}
+    .nav{height:70px;display:flex;align-items:center;justify-content:space-between;gap:24px;position:relative}
+    .brand{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:-.03em;font-size:18px;color:var(--text)}
+    .brand-mark{width:32px;height:32px;display:grid;place-items:center;border-radius:10px;background:var(--panel);color:var(--accent);font-size:18px;border:1px solid var(--line)}
+    .brand span em{color:var(--accent);font-style:normal}
+    
+    .links{display:flex;align-items:center;gap:24px;color:var(--muted);font-size:14px;font-weight:500}
+    .links a:hover{color:var(--accent);transition:0.2s}
+    
+    .nav-actions{display:flex;align-items:center;gap:12px}
+    .btn{border:0;border-radius:14px;padding:14px 20px;font-weight:700;transition:.2s;display:inline-flex;align-items:center;justify-content:center;gap:8px; font-size: 15px;}
+    .btn:hover{transform:scale(1.02)}
+    .btn-ghost{background:var(--panel);border:1px solid var(--line);color:var(--text)}
+    .btn-primary{background:var(--accent);color:#fff; box-shadow:0 4px 15px rgba(155,122,255,.3)}
+    .btn-primary:hover{background:var(--accent-hover)}
+
+    .theme-toggle { background: var(--panel); border: 1px solid var(--line); color: var(--text); border-radius: 50%; width: 38px; height: 38px; display: grid; place-items: center; font-size: 16px; transition: 0.2s; }
+
+    /* ÁREA DO SALDO */
+    .balance-section { padding: 30px 0 20px; text-align: center; }
+    .balance-label { font-size: 13px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;}
+    .balance-value { font-size: 48px; font-weight: 900; letter-spacing: -0.05em; color: var(--text); margin: 0; line-height: 1.1;}
+    
+    .quick-actions { display: flex; justify-content: center; gap: 15px; margin-bottom: 40px; }
+    .qa-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; font-weight: 600; transition: 0.2s; }
+    .qa-btn:hover { color: var(--text); }
+    .qa-icon { width: 50px; height: 50px; border-radius: 16px; background: var(--panel); display: grid; place-items: center; font-size: 22px; border: 1px solid var(--line); color: var(--text); transition: 0.2s;}
+    .qa-btn:hover .qa-icon { background: var(--panel-hover); }
+
+    .section-head{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:20px}
+    .section-head h2{font-size:22px;letter-spacing:-.03em;margin:0;font-weight:800;color:var(--text)}
+    
+    .auction-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px; margin-bottom: 40px;}
+    .auction-card{border:1px solid var(--line);border-radius:20px;background:var(--panel);overflow:hidden;transition:.25s; display: flex; flex-direction: column;}
+    .auction-card:hover{transform:translateY(-3px); border-color: var(--accent);}
+    
+    .card-art{height:120px;position:relative;display:grid;place-items:center;background:var(--panel-hover)}
+    .card-art.photo-art{background-size:cover;background-position:center}
+    .card-status{position:absolute;left:12px;top:12px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;background:var(--panel);padding:4px 8px;border-radius:8px;color:var(--accent);border:1px solid var(--line)}
+    
+    .card-body{padding:16px; flex: 1; display: flex; flex-direction: column;}
+    .card-title-row{display:flex;align-items:start;justify-content:space-between;gap:10px}
+    .card-title-row h3{margin:0;font-size:16px;letter-spacing:-.02em;font-weight:700;color:var(--text)}
+    .card-prize{font-size:24px;font-weight:900;letter-spacing:-.03em;margin:10px 0;color:var(--text)}
+    
+    .card-meta{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;padding-bottom:12px;border-bottom:1px solid var(--line); margin-bottom: 12px;}
+    .card-meta b{color:var(--accent);font-weight:700}
+    
+    .countdown-box{padding:8px 10px;border-radius:10px;background:rgba(255,69,58,.1);display:flex;align-items:center;justify-content:space-between;gap:8px; margin-bottom: 15px;}
+    .countdown-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#ff453a}
+    .countdown-clock{font-size:14px;line-height:1;font-weight:800;letter-spacing:.02em;font-variant-numeric:tabular-nums;color:#ff453a}
+    
+    .card-actions .btn{width:100%; font-size: 14px; padding: 12px; border-radius: 12px;}
+
+    .deposit-options{display:grid;grid-template-columns:repeat(3,1fr);gap:12px; margin-bottom: 40px;}
+    .deposit-option{border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:20px; text-align: center;}
+    .deposit-option .amount{font-size:24px;font-weight:800;letter-spacing:-.03em;margin:0 0 10px;color:var(--text)}
+    .deposit-option .btn{width:100%;font-size:13px; padding: 10px;}
+
+    .withdraw-area{background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:25px; max-width:500px; margin:0 auto;}
+    .form-group{margin-bottom:16px;}
+    .form-group label{display:block; font-size:12px; font-weight:600; color:var(--muted); margin-bottom:6px;}
+    .form-group input{width:100%; padding:14px; border-radius:12px; border:1px solid var(--line); background:var(--input-bg); color:var(--text); font-size:15px; transition:0.2s; font-family:inherit;}
+    .form-group input:focus{outline:none; border-color:var(--accent);}
+    
+    .how{margin: 40px 0; background:var(--panel); border-radius: 20px; padding: 25px;}
+    .how h2{font-size:22px; margin: 0 0 15px; color:var(--text)}
+    .steps{display:grid;gap:12px}
+    .step{display:flex;gap:14px;align-items:center;}
+    .step-num{width:30px;height:30px;flex:0 0 30px;border-radius:50%;display:grid;place-items:center;color:#fff;background:var(--accent);font-weight:800;font-size:13px}
+    .step h3{font-size:14px;margin:0 0 2px;font-weight:700;color:var(--text)}.step p{font-size:12px;color:var(--muted);margin:0}
+    
+    .faq-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px; margin-bottom: 40px;}
+    .faq-item{padding:16px;border:1px solid var(--line);background:var(--panel);border-radius:14px}
+    .faq-item h3{font-size:14px;margin:0 0 5px;font-weight:700;color:var(--text)}.faq-item p{font-size:12px;color:var(--muted);margin:0}
+    
+    footer{border-top:1px solid var(--line);padding:20px 0;color:var(--muted);font-size:11px; text-align: center;}
+    
+    .toast{position:fixed;left:50%;top:80px;transform:translate(-50%,-20px);opacity:0;pointer-events:none;background:var(--accent);color:#fff;padding:12px 20px;border-radius:12px;font-weight:700;font-size:13px;z-index:50;transition:.3s;box-shadow:var(--shadow);text-align:center; width:max-content; max-width:90%;}
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+    
+    .mobile-bottom-nav { display: none; }
+
+    @media(max-width:650px){
+      .wrap{width:calc(100% - 24px)}
+      .nav{height:60px;}
+      .brand{font-size: 16px;}
+      .links{display: none;}
+      
+      .mobile-bottom-nav {
+        display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bottom-nav-bg); backdrop-filter: blur(10px); border-top: 1px solid var(--line); padding: 10px 15px 20px; justify-content: space-around; z-index: 100;
+      }
+      .mobile-nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--muted); font-size: 10px; font-weight: 600; }
+      .mobile-nav-item.active { color: var(--accent); }
+      .mobile-nav-item svg { width: 22px; height: 22px; fill: currentColor; }
+      
+      .balance-value { font-size: 42px; }
+      .quick-actions { gap: 10px; }
+      .qa-icon { width: 45px; height: 45px; font-size: 20px; }
+      
+      .auction-grid{grid-template-columns:1fr;}
+      .deposit-options{grid-template-columns:1fr;}
+      .faq-grid{grid-template-columns:1fr;}
+      .card-art{height:140px;}
+      
+      /* Animação mais lenta no mobile pra dar tempo de ler */
+      .trust-banner span { animation: marquee 15s linear infinite; }
+    }
+  </style>
+</head>
+<body>
+  <!-- BARRA DE CONFIANÇA -->
+  <div class="trust-banner">
+    <span>🌐 <strong>Plataforma Internacional</strong> operando no Brasil • Participe do 1º Leilão Oficial com prêmios de até R$ 100.000 e o patrocínio das maiores marcas do país.</span>
+  </div>
+
+  <header>
+    <div class="wrap nav">
+      <a class="brand" href="#inicio"><span class="brand-mark">R$</span><span>Leilão <em>de Real</em></span></a>
+      
+      <nav class="links" id="navLinks">
+        <a href="#leiloes">Leilões</a>
+        <a href="#deposito">Depósito</a>
+        <a href="#saque">Saque</a>
+      </nav>
+      
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Mudar Tema">🌙</button>
+      </div>
+    </div>
+  </header>
+  
+  <main class="wrap">
+    <section class="balance-section" id="inicio">
+      <div class="balance-label">Saldo Disponível</div>
+      <h1 class="balance-value" id="valorSaldo">R$ 0,00</h1>
+    </section>
+
+    <div class="quick-actions">
+      <a href="#deposito" class="qa-btn"><div class="qa-icon">↓</div>Receber</a>
+      <a href="#saque" class="qa-btn"><div class="qa-icon">↑</div>Enviar</a>
+      <a href="#leiloes" class="qa-btn"><div class="qa-icon">🔄</div>Leilões</a>
+    </div>
+
+    <section id="leiloes">
+      <div class="section-head"><h2>Leilões em Destaque</h2></div>
+      <div class="auction-grid">
+        
+        <article class="auction-card">
+          <div class="card-art photo-art" style="background-image:linear-gradient(0deg,rgba(19,18,20,0.8),rgba(19,18,20,0.2)),url('https://images.unsplash.com/photo-1654089670624-0db58288cd01?fm=jpg&q=60&w=1200&auto=format&fit=crop')"><span class="card-status">Disponível</span></div>
+          <div class="card-body">
+            <div class="card-title-row"><h3>Caixa Essencial</h3></div>
+            <div class="card-prize">R$ 100,00</div>
+            <div class="card-meta"><span>Lance Atual</span><b id="lance1">R$ 10,00</b></div>
+            <div class="countdown-box"><span class="countdown-label">Termina em</span><span class="countdown-clock" data-seconds="172800"></span></div>
+            <div class="card-actions"><button class="btn btn-primary" onclick="darLance(1, 5.00)">Dar Lance (R$ 5)</button></div>
+          </div>
+        </article>
+        
+        <article class="auction-card">
+          <div class="card-art photo-art" style="background-image:linear-gradient(0deg,rgba(19,18,20,0.8),rgba(19,18,20,0.2)),url('https://images.unsplash.com/photo-1654089670624-0db58288cd01?fm=jpg&q=60&w=1200&auto=format&fit=crop')"><span class="card-status">Disponível</span></div>
+          <div class="card-body">
+            <div class="card-title-row"><h3>Caixa Especial</h3></div>
+            <div class="card-prize">R$ 5.000,00</div>
+            <div class="card-meta"><span>Lance Atual</span><b id="lance2">R$ 50,00</b></div>
+            <div class="countdown-box"><span class="countdown-label">Termina em</span><span class="countdown-clock" data-seconds="259200"></span></div>
+            <div class="card-actions"><button class="btn btn-primary" onclick="darLance(2, 10.00)">Dar Lance (R$ 10)</button></div>
+          </div>
+        </article>
+        
+        <article class="auction-card">
+          <div class="card-art photo-art" style="background-image:linear-gradient(0deg,rgba(19,18,20,0.8),rgba(19,18,20,0.2)),url('https://images.unsplash.com/photo-1654089670624-0db58288cd01?fm=jpg&q=60&w=1200&auto=format&fit=crop')"><span class="card-status">Disponível</span></div>
+          <div class="card-body">
+            <div class="card-title-row"><h3>Caixa Premium</h3></div>
+            <div class="card-prize">R$ 100.000,00</div>
+            <div class="card-meta"><span>Lance Atual</span><b id="lance3">R$ 100,00</b></div>
+            <div class="countdown-box"><span class="countdown-label">Termina em</span><span class="countdown-clock" data-seconds="432000"></span></div>
+            <div class="card-actions"><button class="btn btn-primary" onclick="darLance(3, 50.00)">Dar Lance (R$ 50)</button></div>
+          </div>
+        </article>
+        
+      </div>
+    </section>
+    
+    <section id="deposito">
+      <div class="section-head"><h2>Adicionar Saldo</h2></div>
+      <div class="deposit-options">
+        <article class="deposit-option"><div class="amount">R$ 25</div><a class="btn btn-ghost" href="https://pay.veopag.co/valor-minimo-25-d44f5f" target="_blank" rel="noopener noreferrer">Depositar</a></article>
+        <article class="deposit-option"><div class="amount">R$ 50</div><a class="btn btn-ghost" href="https://pay.veopag.co/valor-de-50-reais-03d9d4" target="_blank" rel="noopener noreferrer">Depositar</a></article>
+        <article class="deposit-option"><div class="amount">R$ 100</div><a class="btn btn-ghost" href="https://pay.veopag.co/valor-de-100-44f25b" target="_blank" rel="noopener noreferrer">Depositar</a></article>
+      </div>
+    </section>
+
+    <section id="saque">
+      <div class="section-head"><h2>Solicitar Saque</h2></div>
+      <div class="withdraw-area">
+        <div class="form-group">
+          <label for="nomeSaque">Nome Completo</label>
+          <input type="text" id="nomeSaque" placeholder="Digite seu nome completo">
+        </div>
+        <div class="form-group">
+          <label for="cpfSaque">CPF</label>
+          <input type="text" id="cpfSaque" placeholder="000.000.000-00">
+        </div>
+        <div class="form-group">
+          <label for="pixSaque">Chave PIX</label>
+          <input type="text" id="pixSaque" placeholder="Digite sua chave PIX">
+        </div>
+        <div class="form-group">
+          <label for="valorSaque">Valor do Saque (R$)</label>
+          <input type="number" id="valorSaque" placeholder="0.00" min="1" step="0.01">
+        </div>
+        <button class="btn btn-primary" onclick="solicitarSaque()" style="width: 100%;">Solicitar Saque</button>
+      </div>
+    </section>
+    
+    <section class="how">
+      <h2>Como funciona</h2>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div><h3>Adicione saldo</h3><p>Deposite via PIX ou cartão.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div><h3>Escolha o leilão</h3><p>Navegue e encontre o prêmio.</p></div></div>
+        <div class="step"><div class="step-num">3</div><div><h3>Dê seu lance</h3><p>Use seu saldo para participar.</p></div></div>
+      </div>
+    </section>
+    
+    <section id="duvidas">
+      <div class="section-head"><h2>Dúvidas</h2></div>
+      <div class="faq-grid">
+        <article class="faq-item"><h3>Os leilões são reais?</h3><p>Sim, todos ativos e disponíveis.</p></article>
+        <article class="faq-item"><h3>Como funciona o saque?</h3><p>Você solicita via PIX a qualquer momento.</p></article>
+      </div>
+    </section>
+  </main>
+  
+  <footer>
+    <div class="wrap">
+      <p>Leilões e prêmios de responsabilidade da plataforma.</p>
+      <p style="margin-top: 5px;">&copy; 2024 Leilão de Real.</p>
+    </div>
+  </footer>
+  
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <nav class="mobile-bottom-nav">
+    <a href="#inicio" class="mobile-nav-item active">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      Início
+    </a>
+    <a href="#leiloes" class="mobile-nav-item">
+      <svg viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+      Leilões
+    </a>
+    <a href="#saque" class="mobile-nav-item">
+      <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 16H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V9h10v2zm0-4H7V5h10v2z"/></svg>
+      Saque
+    </a>
+    <a href="#deposito" class="mobile-nav-item">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+      Depósito
+    </a>
+  </nav>
+  
+  <script>
+    let saldoUsuario = 0.00;
+    
+    // PRA TESTAR, TIRA AS // DA LINHA ABAIXO
+    // saldoUsuario = 500.00; 
+
+    const toast = document.getElementById('toast');
+    let toastTimer;
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
+    }
+
+    function atualizarSaldoTela() {
+      document.getElementById('valorSaldo').textContent = 'R$ ' + saldoUsuario.toFixed(2).replace('.', ',');
+    }
+    
+    atualizarSaldoTela();
+
+    function darLance(id, valorLance) {
+      if (saldoUsuario < valorLance) {
+        showToast("⚠️ Saldo insuficiente. Adicione saldo para continuar.");
+        document.getElementById('deposito').scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+
+      saldoUsuario -= valorLance;
+      atualizarSaldoTela();
+
+      let lanceAtualElement = document.getElementById('lance' + id);
+      let valorTexto = lanceAtualElement.textContent.replace('R$ ', '').replace(',', '.');
+      let valorAtual = parseFloat(valorTexto);
+      
+      let novoValor = valorAtual + valorLance;
+      lanceAtualElement.textContent = 'R$ ' + novoValor.toFixed(2).replace('.', ',');
+      
+      showToast("✅ Lance registrado!");
+    }
+
+    function solicitarSaque() {
+      let nome = document.getElementById('nomeSaque').value.trim();
+      let cpf = document.getElementById('cpfSaque').value.trim();
+      let chavePix = document.getElementById('pixSaque').value.trim();
+      let valorSaque = parseFloat(document.getElementById('valorSaque').value);
+
+      if (!nome || !cpf || !chavePix || isNaN(valorSaque) || valorSaque <= 0) {
+        showToast("❌ Preencha todos os campos.");
+        return;
+      }
+
+      if (valorSaque > saldoUsuario) {
+        showToast("⚠️ Saldo insuficiente.");
+        return;
+      }
+
+      saldoUsuario -= valorSaque;
+      atualizarSaldoTela();
+
+      document.getElementById('nomeSaque').value = '';
+      document.getElementById('cpfSaque').value = '';
+      document.getElementById('pixSaque').value = '';
+      document.getElementById('valorSaque').value = '';
+
+      showToast("✅ Saque solicitado!");
+    }
+
+    document.querySelectorAll('.countdown-clock').forEach(clock => {
+      let remaining = Number(clock.dataset.seconds);
+      
+      const updateClock = () => {
+        if (remaining <= 0) {
+          clock.textContent = '00:00';
+          clock.closest('.countdown-box').querySelector('.countdown-label').textContent = 'Encerrado';
+          clearInterval(timer);
+          return;
+        }
+
+        const days = Math.floor(remaining / 86400);
+        const hours = Math.floor((remaining % 86400) / 3600);
+        const minutes = Math.floor((remaining % 3600) / 60);
+        const seconds = remaining % 60;
+
+        let display = "";
+        
+        if (days > 0) {
+          display = `${days}d ${String(hours).padStart(2, '0')}h`;
+        } else {
+          display = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        clock.textContent = display;
+        remaining--;
+      };
+      
+      updateClock();
+      const timer = setInterval(updateClock, 1000);
+    });
+
+    function toggleTheme() {
+      const body = document.body;
+      const themeBtn = document.getElementById('themeToggle');
+      
+      body.classList.toggle('light-mode');
+      
+      if (body.classList.contains('light-mode')) {
+        themeBtn.textContent = '☀️';
+        localStorage.setItem('tema', 'light');
+      } else {
+        themeBtn.textContent = '🌙';
+        localStorage.setItem('tema', 'dark');
+      }
+    }
+
+    const temaSalvo = localStorage.getItem('tema');
+    if (temaSalvo === 'light') {
+      document.body.classList.add('light-mode');
+      document.getElementById('themeToggle').textContent = '☀️';
+    }
+  </script>
+</body>
+</html>
